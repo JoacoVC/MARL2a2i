@@ -1,0 +1,22 @@
+Agent_settings:
+  Output_csv: 'output/csv/entrenamiento_final/'
+  Output_model: 'output/models/entrenamiento_final/'
+  Environment:
+    Gui: False 
+    Num_seconds: 7200
+    Min_green: 5
+    Max_green: 60
+    Yellow_time: 3
+    Delta_time: 5
+    # 👇 AQUÍ AGREGAS LOS VALORES GANADORES QUE REVELÓ LA GRÁFICA
+    w1: 4.0
+    w2: 0.3
+  Instances:
+    SARSA_definitivo:
+      Agent_type: 'SARSA'
+      Runs: 10 # Quizás más ejecuciones para estabilizar el entrenamiento
+      Alpha: 0.00005
+      Gamma: 0.5
+      Epsilon: 0.01
+      FourierOrder: 7
+      Lambda: 0.999

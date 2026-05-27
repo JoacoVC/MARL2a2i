@@ -1,0 +1,19 @@
+Agent_settings:
+  Output_csv: 'output/csv/optimizacion/'
+  Output_model: 'output/models/optimizacion/'
+  Environment:
+    Gui: False 
+    Num_seconds: 7200
+    Min_green: 5
+    Max_green: 60
+    Yellow_time: 3
+    Delta_time: 5
+  Instances:
+    SARSA_optimizacion:
+      Agent_type: 'SARSA'
+      Runs: 5
+      Alpha: 0.00005
+      Gamma: 0.5
+      Epsilon: 0.01
+      FourierOrder: 7
+      Lambda: 0.999
