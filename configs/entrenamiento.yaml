@@ -1,0 +1,24 @@
+Agent_settings:
+  Output_csv: 'output/csv/entrenamiento/presion/'
+  Output_model: 'output/models/entrenamiento/presion/'
+  Environment:
+    Gui: False
+    Num_seconds: 7200
+    Min_green: 5
+    Max_green: 60
+    Yellow_time: 3
+    Delta_time: 5
+  Instances:
+    SARSA_run_1:
+      Agent_type: 'SARSA'
+      Runs: 10
+      Alpha: 0.00005
+      Gamma: 0.5
+      Epsilon: 0.01
+      FourierOrder: 7
+      Lambda: 0.999
+    #Fixed_run:
+    #  Agent_type: 'FIXED'
+    #  Runs: 1
+      
+

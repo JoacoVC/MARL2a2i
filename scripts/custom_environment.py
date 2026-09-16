@@ -1,5 +1,4 @@
-
-from sumo_rl import SumoEnvironment, env
+from sumo_rl import SumoEnvironment
 
 class CustomEnvironment:
 
@@ -21,25 +20,23 @@ class CustomEnvironment:
         self.yellow_time = yellow_time
         self.delta_time = delta_time
         self.sim_step = 0
-        
+        self._env = None # Almacenará la instancia única
 
     def get_sumo_env(self, fixed: bool) -> SumoEnvironment:
-    
-        env = SumoEnvironment(
-            net_file="interseccion/nueva_interseccion.net.xml",
-            route_file=self.route_file,
-            use_gui=self.gui,
-            num_seconds=self.num_seconds,
-            delta_time=self.delta_time,
-            yellow_time=self.yellow_time,
-            min_green=self.min_green,
-            max_green=self.max_green,
-            fixed_ts=fixed,
-            add_per_agent_info=True,
-            sumo_warnings=False,
-            single_agent=False,
-            
-        )
-
-
-        return env
+        # Si ya existe, no crees uno nuevo, devuelve el mismo
+        if self._env is None:
+            self._env = SumoEnvironment(
+                net_file="interseccion/nueva_interseccion.net.xml",
+                route_file=self.route_file,
+                use_gui=self.gui,
+                num_seconds=self.num_seconds,
+                delta_time=self.delta_time,
+                yellow_time=self.yellow_time,
+                min_green=self.min_green,
+                max_green=self.max_green,
+                fixed_ts=fixed,
+                add_per_agent_info=True,
+                sumo_warnings=False,
+                single_agent=False,
+            )
+        return self._env

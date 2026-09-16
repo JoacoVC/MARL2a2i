@@ -201,14 +201,58 @@ class SarsaAgent(LearningAgent):
             pickle.dump(data, f)
 
     def load(self, path: str, env: SumoEnvironment) -> None:
+        import gymnasium as gym
+        import numpy as np
+
         with open(path, 'rb') as f:
             data = pickle.load(f)
+
         self.env = env
-        self._init_agent()
+
+        # 1. Identificar las IDs de los semáforos (normalmente ts_a y ts_b)
+        if hasattr(self.env, 'ts_ids'):
+            self.ts_ids = self.env.ts_ids
+        elif hasattr(self.env, 'traffic_signals'):
+            self.ts_ids = list(self.env.traffic_signals.keys())
+        else:
+            temp_obs = self.env.reset()
+            self.ts_ids = list(temp_obs.keys())
+
+        # 2. Calcular las dimensiones de los espacios individuales
+        if hasattr(self.env, 'observation_space') and hasattr(self.env.observation_space, 'shape'):
+            self.obs_dim = self.env.observation_space.shape[0]
+        else:
+            first_ts = self.ts_ids[0]
+            self.obs_dim = self.env.observation_spaces[first_ts].shape[0]
+            
+        if hasattr(self.env, 'action_space') and hasattr(self.env.action_space, 'n'):
+            self.n_actions = self.env.action_space.n
+        else:
+            first_ts = self.ts_ids[0]
+            self.n_actions = self.env.action_spaces[first_ts].n
+
+        # El espacio de estados extendido: mi observación + la fase del vecino
+        extended_obs_dim = self.obs_dim + self.n_actions
         
+        state_space = gym.spaces.Box(
+            low=0,
+            high=1,
+            shape=(extended_obs_dim,),
+            dtype=np.float32
+        )
+    
+        joint_action_space = gym.spaces.Discrete(self.n_actions)
+
+        # 3. Reconstruir el diccionario de agentes internos mapeando los datos del .pkl
+        self.internal_agents = {}
         for ts_id in self.ts_ids:
             if ts_id in data:
-                self.internal_agents[ts_id].alpha = data[ts_id]['alpha']
-                self.internal_agents[ts_id].gamma = data[ts_id]['gamma']
-                self.internal_agents[ts_id].epsilon = data[ts_id]['epsilon']
-                self.internal_agents[ts_id].lamb = data[ts_id]['lamb']
+                self.internal_agents[ts_id] = TrueOnlineSarsaLambda(
+                    state_space=state_space,
+                    action_space=joint_action_space,
+                    alpha=data[ts_id]['alpha'],
+                    gamma=data[ts_id]['gamma'],
+                    epsilon=data[ts_id]['epsilon'],
+                    fourier_order=data[ts_id]['fourier_order'],
+                    lamb=data[ts_id]['lamb']
+                )

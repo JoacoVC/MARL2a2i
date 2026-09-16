@@ -5,16 +5,16 @@ from matplotlib import cm
 
 # 1. Cargar tus datos desde el archivo CSV
 # Cambia 'mis_datos.csv' por el nombre real de tu archivo
-df = pd.read_csv('output\\csv\\entrenamiento\\resumen_optimizacion_pesos1.csv')
+df = pd.read_csv('results.csv')
 
 # --- CÁLCULOS ESTADÍSTICOS ---
-min_z = df['espera_media_global'].min()
-max_z = df['espera_media_global'].max()
-promedio_z = df['espera_media_global'].mean()
+min_z = df['system_total_waiting_time'].min()
+max_z = df['system_total_waiting_time'].max()
+promedio_z = df['system_total_waiting_time'].mean()
 
 # Obtener las coordenadas (w1, w2) de los puntos mínimo y máximo
-fila_min = df[df['espera_media_global'] == min_z].iloc[0]
-fila_max = df[df['espera_media_global'] == max_z].iloc[0]
+fila_min = df[df['system_total_waiting_time'] == min_z].iloc[0]
+fila_max = df[df['system_total_waiting_time'] == max_z].iloc[0]
 
 # Imprimir los resultados en la consola
 print("="*40)

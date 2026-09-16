@@ -13,8 +13,8 @@ import os
 
 def combined_reward_weighted(ts):
     # Recupera los pesos inyectados; si no existen, usa valores base
-    w1 = getattr(ts, 'w1', 1.0)
-    w2 = getattr(ts, 'w2', 0.1)
+    w1 = getattr(ts, 'w1', 0.0)
+    w2 = getattr(ts, 'w2', 1.0)
 
     ts_wait = sum(ts.get_accumulated_waiting_time_per_lane()) / 100.0
     dif_wait = ts.last_measure - ts_wait
@@ -34,11 +34,12 @@ class Runner:
         self.learn: bool = learn
         self.agents: list[LearningAgent] = []
         self._set_environment()
+        self._load_agents()
 
     def _set_environment(self) -> None:
        
         env_config = self.configs['Environment']
-        route_file = "interseccion/nueva_interseccion.rou.xml"
+        route_file = "interseccion/nueva_interseccion_entrenamiento(42).rou.xml"
 
         self.env = CustomEnvironment(
             route_file=route_file,
@@ -50,49 +51,11 @@ class Runner:
             delta_time=env_config['Delta_time'],
         )
 
-#    def run_all_experiments(self):
-#        # 1. Guardar ruta base original
-#        ruta_base_original = self.configs['Output_csv']
-#        
-#        pesos_w1 = [4]
-#        pesos_w2 = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-#
-#        # En runner.py, antes de los for:
-#        print("Funciones registradas:", TrafficSignal.reward_fns.keys())
-#        for w1 in pesos_w1:
-#            for w2 in pesos_w2:
-#                # Actualizar ruta de salida para cada combinación
-#                self.configs['Output_csv'] = os.path.join(ruta_base_original, f"w1_{w1}_w2_{w2}")
-#
-#                # Limpieza y carga 
-#                self.agents = [] 
-#                self._load_agents()
-#
-#                # INYECTAR PESOS 
-#                for agent in self.agents:
-#                    # En sumo-rl, los semáforos están en el diccionario 'traffic_signals'
-#                    env_unwrapped = agent.env.unwrapped
-#                    if hasattr(env_unwrapped, 'traffic_signals'):
-#                        for ts in env_unwrapped.traffic_signals.values():
-#                            ts.w1 = w1
-#                            ts.w2 = w2
-#                    else:
-#                        print("Error: No se encontró el atributo traffic_signals en el entorno.")
-#
-#                # Mensaje de progreso
-#                print(f"\n>>>> Iniciando: w1={w1}, w2={w2}", flush=True)
-#
-#             
-#                self.run()
-#                
-#                # Cerrar para liberar procesos de SUMO
-#                for agent in self.agents:
-#                    agent.env.close()
 
     def run_all_experiments(self):
         ruta_base_original = self.configs['Output_csv']
-        pesos_w1 = [5, 6, 7, 8, 9, 10]
-        pesos_w2 = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+        pesos_w1 = [6]
+        pesos_w2 = [0.8, 0.9, 1.0]
 
         # 1. Lista para recolectar el "punto Z" de cada combinación
         matriz_resultados = []
@@ -157,46 +120,24 @@ class Runner:
         else:
             print("\nNo se recolectaron datos para generar el resumen.")
 
-        # 4. GENERAR LA GRÁFICA FINAL 
-        self.graficar_superficie_pesos(matriz_resultados, ruta_base_original)
-        
-
-    def graficar_superficie_pesos(self, datos, ruta_guardado):
-        df_plot = pd.DataFrame(datos)
-        # Reestructurar datos para la gráfica (Matriz de w1 vs w2)
-        pivot = df_plot.pivot(index='w1', columns='w2', values='espera_media')
-
-        plt.figure(figsize=(12, 9))
-        # cmap="YlGnBu_r" usa azul para valores bajos (mejor) y amarillo para altos
-        sns.heatmap(pivot, annot=True, fmt=".2f", cmap="YlGnBu_r")
-        
-        plt.title('Optimización de Pesos: Tiempo de Espera Promedio Total')
-        plt.xlabel('Peso w2 (Presión)')
-        plt.ylabel('Peso w1 (Diferencia de Tiempo de Espera)')
-        
-        nombre_grafica = os.path.join(ruta_guardado, "mapa_optimizacion_pesos.png")
-        plt.savefig(nombre_grafica)
-        print(f"\nGráfica de optimización guardada en: {nombre_grafica}")
-        plt.show()
 
     
 
     def run(self) -> None:
-        if self.env is None:
-            self._set_environment()
+        if not self.agents:
+            self._load_agents()
 
-        # --- NUEVA INYECCIÓN AUTOMÁTICA DESDE EL YAML ---
-        env_config = self.configs.get('Environment', {})
-        w1_yaml = env_config.get('w1', 1.0) # 1.0 por defecto si no viene en el YAML
-        w2_yaml = env_config.get('w2', 0.1) # 0.1 por defecto si no viene en el YAML
+        # Obtener el entorno compartido a través del primer agente
+        env_unwrapped = self.agents[0].env
         
-        # Recuperamos el entorno unwrapped para setear los pesos correspondientes
-        env_unwrapped = self.env.get_sumo_env(False)
+        env_config = self.configs.get('Environment', {})
+        w1_yaml = env_config.get('w1', 0.0)
+        w2_yaml = env_config.get('w2', 1.0)
+        
         if hasattr(env_unwrapped, 'traffic_signals'):
             for ts in env_unwrapped.traffic_signals.values():
                 ts.w1 = w1_yaml
                 ts.w2 = w2_yaml
-        # ------------------------------------------------
 
         output_path = os.path.join(self.configs['Output_csv'])
         output_csvs_paths: dict[str, str] = {}

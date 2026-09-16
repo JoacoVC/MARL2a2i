@@ -5,10 +5,10 @@ from matplotlib import cm
 from scipy.interpolate import griddata  # Para suavizar la superficie
 
 # 1. Cargar tus datos
-df = pd.read_csv('output\\csv\\entrenamiento\\resumen_optimizacion_pesos1.csv')
+df = pd.read_csv('results.csv')
 x_datos = df['w1'].values
 y_datos = df['w2'].values
-z_datos = df['espera_media_global'].values
+z_datos = df['system_total_waiting_time'].values
 
 # 2. CREAR UNA MALLA MÁS DENSA Y SUAVE (Interpolación)
 # Creamos una cuadrícula mucho más fina para que el plano se vea liso
